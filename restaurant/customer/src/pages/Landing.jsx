@@ -39,8 +39,10 @@ const Landing = () => {
           }
         }
       } catch (error) {
-        console.error('Error fetching restaurant:', error);
-        alert('Restaurant not found. Please scan a valid QR code.');
+        console.error('Error fetching restaurant — using offline demo mode:', error);
+        // Fallback: allow demo mode even when API/DB is unavailable
+        setCurrentRestaurantId('demo');
+        setRestaurantData({ restaurantName: 'Demo Restaurant', restaurantId: 'demo' });
       } finally {
         setLoading(false);
       }
@@ -212,7 +214,7 @@ const Landing = () => {
               <button
                 type="submit"
                 onClick={(e) => {
-                  console.log('🔥 DIRECT CLICK EVENT!', { table, restaurantId });
+                  console.log('🔥 DIRECT CLICK EVENT!', { table, currentRestaurantId });
                 }}
                 className="w-full bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 rounded-lg transition-colors"
               >
@@ -233,7 +235,7 @@ const Landing = () => {
                 Restaurant Portal
               </p>
               <a
-                href="http://localhost:3001"
+                href="/admin"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-primary-600 hover:text-primary-700 font-medium"

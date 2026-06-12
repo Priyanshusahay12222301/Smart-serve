@@ -213,7 +213,7 @@ const Dashboard = () => {
           />
           <StatCard
             icon={DollarSign}
-            label="Revenue Today"
+            label="Total Revenue"
             value={`$${stats.todayRevenue.toFixed(2)}`}
             subtext={`+${stats.completedOrders} transactions`}
             color="bg-primary-500"

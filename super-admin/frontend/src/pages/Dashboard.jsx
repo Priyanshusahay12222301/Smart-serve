@@ -61,6 +61,23 @@ import {
   QrCode
 } from 'lucide-react';
 
+const API_BASE_URL =
+  import.meta.env.VITE_SUPER_ADMIN_API_BASE_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  '/api';
+axios.defaults.baseURL = API_BASE_URL;
+
+let apiPrefixInterceptorRegistered = false;
+if (!apiPrefixInterceptorRegistered) {
+  apiPrefixInterceptorRegistered = true;
+  axios.interceptors.request.use((config) => {
+    if (typeof config.url === 'string' && config.url.startsWith('/api/')) {
+      config.url = config.url.replace('/api', '');
+    }
+    return config;
+  });
+}
+
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -174,7 +191,13 @@ const Dashboard = () => {
 
   // Socket.io real-time connection
   useEffect(() => {
-    const socket = io('http://localhost:5001');
+    const disableSocket = import.meta.env.VITE_DISABLE_SOCKET === 'true';
+    if (disableSocket) {
+      return undefined;
+    }
+
+    const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001';
+    const socket = io(socketUrl);
 
     // Join super-admin room for real-time updates
     socket.emit('join-super-admin');
@@ -712,9 +735,57 @@ const Dashboard = () => {
                   <div className="flex items-center justify-center h-full text-gray-400">
                     Loading analytics...
                   </div>
-                ) : (
+                ) : (() => {
+                  // Determine number of days based on period
+                  const periodDays = analyticsPeriod === '7days' ? 7
+                    : analyticsPeriod === '30days' ? 30
+                    : analyticsPeriod === '90days' ? 90
+                    : 365;
+
+                  // Build a full date scaffold for the period
+                  const dateScaffold = Array.from({ length: periodDays }, (_, i) => {
+                    const d = new Date();
+                    d.setDate(d.getDate() - (periodDays - 1 - i));
+                    return d.toISOString().slice(0, 10);
+                  });
+
+                  // Index API data by date
+                  const apiDataMap = {};
+                  (analyticsData.ordersOverTime || []).forEach(item => {
+                    apiDataMap[item._id] = item;
+                  });
+
+                  // Merge scaffold with API data
+                  const chartData = dateScaffold.map(date => ({
+                    _id: date,
+                    orders: apiDataMap[date]?.orders || 0,
+                    revenue: apiDataMap[date]?.revenue || 0,
+                  }));
+
+                  // Check if there's any real data
+                  const hasData = chartData.some(d => d.orders > 0 || d.revenue > 0);
+
+                  // Format date label as MM/DD
+                  const formatDate = (dateStr) => {
+                    const [, month, day] = dateStr.split('-');
+                    return `${month}/${day}`;
+                  };
+
+                  if (!hasData) {
+                    return (
+                      <div className="flex flex-col items-center justify-center h-full gap-2">
+                        <svg className="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        <p className="text-gray-500 text-sm">No orders yet in this period</p>
+                        <p className="text-gray-600 text-xs">Orders will appear here once restaurants start receiving them</p>
+                      </div>
+                    );
+                  }
+
+                  return (
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={analyticsData.ordersOverTime}>
+                    <AreaChart data={chartData}>
                       <defs>
                         <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.3}/>
@@ -726,18 +797,30 @@ const Dashboard = () => {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                      <XAxis dataKey="_id" stroke="#9ca3af" style={{ fontSize: '12px' }} />
+                      <XAxis
+                        dataKey="_id"
+                        stroke="#9ca3af"
+                        style={{ fontSize: '11px' }}
+                        tickFormatter={formatDate}
+                        interval={periodDays <= 7 ? 0 : periodDays <= 30 ? 4 : periodDays <= 90 ? 13 : 30}
+                      />
                       <YAxis stroke="#9ca3af" style={{ fontSize: '12px' }} />
-                      <Tooltip 
+                      <Tooltip
                         contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
                         labelStyle={{ color: '#f3f4f6' }}
+                        labelFormatter={(label) => `Date: ${label}`}
+                        formatter={(value, name) => [
+                          name === 'Revenue ($)' ? `$${value.toFixed(2)}` : value,
+                          name
+                        ]}
                       />
                       <Legend />
                       <Area type="monotone" dataKey="orders" stroke="#7c3aed" fillOpacity={1} fill="url(#colorOrders)" name="Orders" />
                       <Area type="monotone" dataKey="revenue" stroke="#10b981" fillOpacity={1} fill="url(#colorRevenue)" name="Revenue ($)" />
                     </AreaChart>
                   </ResponsiveContainer>
-                )}
+                  );
+                })()}
               </div>
             </div>
 

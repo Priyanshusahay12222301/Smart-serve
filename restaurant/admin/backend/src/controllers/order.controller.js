@@ -1,5 +1,6 @@
 const Order = require('../models/Order.model');
 const MenuItem = require('../models/Menu.model');
+const SmartServe = require('../models/SmartServe.model');
 
 // Get all orders for the restaurant
 exports.getAllOrders = async (req, res) => {
@@ -53,6 +54,9 @@ exports.updateOrderStatus = async (req, res) => {
       return res.status(400).json({ message: 'Invalid status' });
     }
 
+    // Get the current order first to check if status is changing to COMPLETED
+    const currentOrder = await Order.findOne({ _id: req.params.id, smartServeId: req.smartServeId });
+    
     const order = await Order.findOneAndUpdate(
       { _id: req.params.id, smartServeId: req.smartServeId },
       { status },
@@ -61,6 +65,16 @@ exports.updateOrderStatus = async (req, res) => {
 
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // If order is being marked as COMPLETED, update the SmartServe stats
+    if (status === 'COMPLETED' && currentOrder.status !== 'COMPLETED') {
+      await SmartServe.findByIdAndUpdate(req.smartServeId, {
+        $inc: {
+          'stats.totalOrders': 1,
+          'stats.totalRevenue': order.totalAmount
+        }
+      });
     }
 
     res.json({ 
@@ -79,13 +93,18 @@ exports.getOrderStats = async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const completedOrders = await Order.find({
+      smartServeId: req.smartServeId,
+      status: 'COMPLETED'
+    }).select('totalAmount');
+
+    const totalRevenue = completedOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+
     const [
       todayOrders,
       pendingOrders,
       preparingOrders,
-      readyOrders,
-      completedOrders,
-      todayRevenue
+      readyOrders
     ] = await Promise.all([
       Order.countDocuments({ 
         smartServeId: req.smartServeId,
@@ -102,27 +121,7 @@ exports.getOrderStats = async (req, res) => {
       Order.countDocuments({ 
         smartServeId: req.smartServeId,
         status: 'READY'
-      }),
-      Order.countDocuments({ 
-        smartServeId: req.smartServeId,
-        status: 'COMPLETED',
-        createdAt: { $gte: today }
-      }),
-      Order.aggregate([
-        {
-          $match: {
-            smartServeId: req.smartServeId,
-            status: 'COMPLETED',
-            createdAt: { $gte: today }
-          }
-        },
-        {
-          $group: {
-            _id: null,
-            total: { $sum: '$totalAmount' }
-          }
-        }
-      ])
+      })
     ]);
 
     res.json({
@@ -132,8 +131,8 @@ exports.getOrderStats = async (req, res) => {
         pendingOrders,
         preparingOrders,
         readyOrders,
-        completedOrders,
-        todayRevenue: todayRevenue[0]?.total || 0
+        completedOrders: completedOrders.length,
+        todayRevenue: totalRevenue
       }
     });
   } catch (error) {

@@ -469,7 +469,7 @@ export const getSystemStats = async (req, res) => {
 
     // Calculate total revenue across all restaurants
     const revenueAggregation = await Order.aggregate([
-      { $match: { paymentStatus: 'PAID' } },
+      { $match: { status: 'COMPLETED' } },
       { $group: { _id: null, total: { $sum: '$totalAmount' } } },
     ]);
 

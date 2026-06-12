@@ -115,20 +115,52 @@ exports.getOrder = async (req, res) => {
   }
 };
 
+const createDemoRestaurant = async (SmartServe, displayName) => {
+  const ownerEmail = process.env.DEMO_SMART_ADMIN_EMAIL || 'demo@smartserve.com';
+  const ownerName = 'Demo Owner';
+  const now = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 7).toUpperCase();
+  const restaurantId = `REST-${now}-${random}`;
+  const customerAppUrl = process.env.CUSTOMER_APP_URL || 'http://localhost:3002';
+
+  return SmartServe.create({
+    restaurantId,
+    restaurantName: displayName,
+    ownerName,
+    ownerEmail,
+    ownerPhone: '555-0123',
+    address: '123 Food Street',
+    qrCode: {
+      uniqueId: restaurantId,
+      url: `${customerAppUrl}/${restaurantId}`
+    },
+    isActive: true
+  });
+};
+
 // Get restaurant info by name (for QR code landing)
 exports.getRestaurantByName = async (req, res) => {
   try {
     const { name } = req.params;
     const SmartServe = require('../models/SmartServe.model');
-    
-    const restaurant = await SmartServe.findOne({ 
-      name: { $regex: name, $options: 'i' }
-    }).select('_id name address phone');
-    
+
+    const restaurant = await SmartServe.findOne({
+      $or: [
+        { restaurantName: { $regex: name, $options: 'i' } },
+        { name: { $regex: name, $options: 'i' } }
+      ]
+    }).select('_id restaurantName name address phone ownerPhone restaurantId');
+
     if (!restaurant) {
+      const demoName = (process.env.DEMO_RESTAURANT_NAME || 'Delicious Bites').toLowerCase();
+      if (name.toLowerCase() === demoName) {
+        const created = await createDemoRestaurant(SmartServe, process.env.DEMO_RESTAURANT_NAME || 'Delicious Bites');
+        return res.json({ success: true, data: created });
+      }
+
       return res.status(404).json({ message: 'Restaurant not found' });
     }
-    
+
     res.json({ success: true, data: restaurant });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

@@ -5,6 +5,15 @@ import { ArrowLeft, Plus, Eye, EyeOff, Edit2, Trash2, X, Upload, Image as ImageI
 
 const MenuManagement = () => {
   const navigate = useNavigate();
+
+  const getImageUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+      return url;
+    }
+    const backendBase = (import.meta.env.VITE_API_BASE_URL || '').replace('/api', '');
+    return `${backendBase}${url}`;
+  };
   const [menuItems, setMenuItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -57,10 +66,31 @@ const MenuManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      let currentImageUrl = formData.imageUrl;
+
+      // Automatically upload selected image if not uploaded yet
+      if (imageFile) {
+        setUploading(true);
+        const formDataToUpload = new FormData();
+        formDataToUpload.append('image', imageFile);
+        try {
+          const response = await menuAPI.uploadImage(formDataToUpload);
+          currentImageUrl = response.data.data.imageUrl;
+        } catch (uploadError) {
+          console.error('Failed to upload image during submit:', uploadError);
+          alert('Failed to upload image, please try again.');
+          setUploading(false);
+          return;
+        }
+        setUploading(false);
+      }
+
+      const submissionData = { ...formData, imageUrl: currentImageUrl };
+
       if (editingItem) {
-        await menuAPI.update(editingItem._id, formData);
+        await menuAPI.update(editingItem._id, submissionData);
       } else {
-        await menuAPI.create(formData);
+        await menuAPI.create(submissionData);
       }
       setShowAddModal(false);
       setEditingItem(null);
@@ -161,7 +191,7 @@ const MenuManagement = () => {
     <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
       <div className="aspect-video overflow-hidden bg-gray-100">
         <img
-          src={item.imageUrl}
+          src={getImageUrl(item.imageUrl)}
           alt={item.name}
           className="w-full h-full object-cover"
         />
@@ -353,7 +383,7 @@ const MenuManagement = () => {
                 {(imagePreview || formData.imageUrl) && (
                   <div className="mb-3 relative">
                     <img 
-                      src={imagePreview || formData.imageUrl} 
+                      src={imagePreview || getImageUrl(formData.imageUrl)} 
                       alt="Preview" 
                       className="w-full h-48 object-cover rounded-lg border border-gray-200"
                     />

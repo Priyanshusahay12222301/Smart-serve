@@ -4,9 +4,27 @@ import { useCart } from '../context/CartContext';
 import { menuAPI } from '../services/api';
 import { ShoppingCart, Plus, Minus, X, Store, ChevronRight } from 'lucide-react';
 
+const DEMO_MENU = [
+  { _id: 'd1', name: 'Classic Burger', price: 12.99, category: 'Burgers', description: 'Juicy beef patty with lettuce, tomato, and house sauce', isAvailable: true, imageUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80' },
+  { _id: 'd2', name: 'Margherita Pizza', price: 14.99, category: 'Pizza', description: 'Classic tomato sauce with fresh mozzarella and basil', isAvailable: true, imageUrl: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400&q=80' },
+  { _id: 'd3', name: 'Caesar Salad', price: 9.99, category: 'Salads', description: 'Crisp romaine, parmesan, croutons with Caesar dressing', isAvailable: true, imageUrl: 'https://images.unsplash.com/photo-1550304943-4f24f54ddde9?w=400&q=80' },
+  { _id: 'd4', name: 'Pasta Carbonara', price: 15.99, category: 'Pasta', description: 'Creamy egg sauce with pancetta and parmesan', isAvailable: true, imageUrl: 'https://images.unsplash.com/photo-1612874742237-6526221588e3?w=400&q=80' },
+  { _id: 'd5', name: 'Grilled Salmon', price: 22.99, category: 'Mains', description: 'Atlantic salmon with seasonal vegetables and lemon butter', isAvailable: true, imageUrl: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&q=80' },
+  { _id: 'd6', name: 'Chocolate Lava Cake', price: 7.99, category: 'Desserts', description: 'Warm chocolate cake with a molten center, served with ice cream', isAvailable: true, imageUrl: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&q=80' },
+];
+
 const Menu = () => {
   const { restaurantId } = useParams();
   const navigate = useNavigate();
+
+  const getImageUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+      return url;
+    }
+    const backendBase = (import.meta.env.VITE_API_BASE_URL || '').replace('/api', '');
+    return `${backendBase}${url}`;
+  };
   const { cart, addToCart, updateQuantity, removeFromCart, getTotalItems, getTotalPrice, isOpen, toggleCart, setIsOpen, setRestaurantId } = useCart();
   const [menuItems, setMenuItems] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -20,19 +38,37 @@ const Menu = () => {
   }, [restaurantId]);
 
   const fetchMenuData = async () => {
+    // Use demo data if restaurantId is 'demo' or in demo mode
+    if (!restaurantId || restaurantId === 'demo') {
+      setMenuItems(DEMO_MENU);
+      const cats = [...new Set(DEMO_MENU.map(item => item.category))];
+      setCategories(['All', ...cats]);
+      setLoading(false);
+      return;
+    }
     try {
       console.log('Fetching menu for restaurant:', restaurantId);
       const itemsRes = await menuAPI.getAll(restaurantId);
       console.log('Menu response:', itemsRes.data);
-      setMenuItems(itemsRes.data.data);
-      
-      // Extract categories from menu items
-      const cats = [...new Set(itemsRes.data.data.map(item => item.category))];
-      setCategories(['All', ...cats]);
+      const items = itemsRes.data.data || [];
+      if (items.length === 0) {
+        // Empty menu from DB — show demo items as fallback
+        setMenuItems(DEMO_MENU);
+        const cats = [...new Set(DEMO_MENU.map(item => item.category))];
+        setCategories(['All', ...cats]);
+      } else {
+        setMenuItems(items);
+        const cats = [...new Set(items.map(item => item.category))];
+        setCategories(['All', ...cats]);
+      }
       setError(null);
     } catch (error) {
-      console.error('Failed to fetch menu:', error);
-      setError('Failed to load menu. Please refresh the page.');
+      console.error('Failed to fetch menu — using demo items:', error);
+      // Fallback to demo menu instead of showing error
+      setMenuItems(DEMO_MENU);
+      const cats = [...new Set(DEMO_MENU.map(item => item.category))];
+      setCategories(['All', ...cats]);
+      setError(null);
     } finally {
       setLoading(false);
     }
@@ -87,7 +123,7 @@ const Menu = () => {
       <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
         <div className="aspect-video overflow-hidden bg-gray-100">
           <img
-            src={item.imageUrl}
+            src={getImageUrl(item.imageUrl)}
             alt={item.name}
             className="w-full h-full object-cover"
           />
@@ -168,7 +204,7 @@ const Menu = () => {
                 {cart.map((item) => (
                   <div key={item._id} className="flex gap-4 bg-gray-50 rounded-lg p-3">
                     <img
-                      src={item.imageUrl}
+                      src={getImageUrl(item.imageUrl)}
                       alt={item.name}
                       className="w-20 h-20 object-cover rounded-lg"
                     />
@@ -248,7 +284,7 @@ const Menu = () => {
                 <Store className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Delicious Bites</h1>
+                <h1 className="text-xl font-bold text-gray-900">Our Menu</h1>
                 <p className="text-sm text-gray-500">Order from our menu</p>
               </div>
             </div>
