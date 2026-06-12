@@ -189,12 +189,23 @@ const MenuManagement = () => {
 
   const MenuItem = ({ item }) => (
     <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-      <div className="aspect-video overflow-hidden bg-gray-100">
-        <img
-          src={getImageUrl(item.imageUrl)}
-          alt={item.name}
-          className="w-full h-full object-cover"
-        />
+      <div className="aspect-video overflow-hidden bg-gray-100 flex items-center justify-center">
+        {item.imageUrl ? (
+          <img
+            src={getImageUrl(item.imageUrl)}
+            alt={item.name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500';
+            }}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center text-gray-400">
+            <ImageIcon className="w-12 h-12 mb-1 stroke-1" />
+            <span className="text-xs">No image</span>
+          </div>
+        )}
       </div>
       <div className="p-4">
         <h3 className="font-semibold text-gray-900 mb-1">{item.name}</h3>

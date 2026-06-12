@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { menuAPI } from '../services/api';
-import { ShoppingCart, Plus, Minus, X, Store, ChevronRight } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, X, Store, ChevronRight, Image as ImageIcon } from 'lucide-react';
 
 const DEMO_MENU = [
   { _id: 'd1', name: 'Classic Burger', price: 12.99, category: 'Burgers', description: 'Juicy beef patty with lettuce, tomato, and house sauce', isAvailable: true, imageUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80' },
@@ -121,12 +121,23 @@ const Menu = () => {
 
     return (
       <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
-        <div className="aspect-video overflow-hidden bg-gray-100">
-          <img
-            src={getImageUrl(item.imageUrl)}
-            alt={item.name}
-            className="w-full h-full object-cover"
-          />
+        <div className="aspect-video overflow-hidden bg-gray-100 flex items-center justify-center">
+          {item.imageUrl ? (
+            <img
+              src={getImageUrl(item.imageUrl)}
+              alt={item.name}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500';
+              }}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center text-gray-400">
+              <ImageIcon className="w-12 h-12 mb-1 stroke-1" />
+              <span className="text-xs">No image</span>
+            </div>
+          )}
         </div>
         <div className="p-4">
           <h3 className="font-semibold text-gray-900 mb-1">{item.name}</h3>
@@ -203,11 +214,22 @@ const Menu = () => {
               <div className="space-y-4">
                 {cart.map((item) => (
                   <div key={item._id} className="flex gap-4 bg-gray-50 rounded-lg p-3">
-                    <img
-                      src={getImageUrl(item.imageUrl)}
-                      alt={item.name}
-                      className="w-20 h-20 object-cover rounded-lg"
-                    />
+                    {item.imageUrl ? (
+                      <img
+                        src={getImageUrl(item.imageUrl)}
+                        alt={item.name}
+                        className="w-20 h-20 object-cover rounded-lg"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-20 h-20 bg-gray-200 flex flex-col items-center justify-center text-gray-400 rounded-lg">
+                        <ImageIcon className="w-6 h-6 stroke-1" />
+                        <span className="text-[10px]">No image</span>
+                      </div>
+                    )}
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900 mb-1">{item.name}</h3>
                       <p className="text-sm text-gray-600 mb-2">${item.price.toFixed(2)} each</p>
