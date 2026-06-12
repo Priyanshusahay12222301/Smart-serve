@@ -5,6 +5,7 @@ import { ArrowLeft, Plus, Eye, EyeOff, Edit2, Trash2, X, Upload, Image as ImageI
 
 const MenuManagement = () => {
   const navigate = useNavigate();
+  const CURRENCY_SYMBOL = import.meta.env.VITE_CURRENCY_SYMBOL || '₹';
 
   const getImageUrl = (url) => {
     if (!url) return '';
@@ -210,7 +211,7 @@ const MenuManagement = () => {
       <div className="p-4">
         <h3 className="font-semibold text-gray-900 mb-1">{item.name}</h3>
         <p className="text-sm text-gray-600 mb-3 line-clamp-2">{item.description}</p>
-        <p className="text-lg font-bold text-primary-600 mb-3">${item.price.toFixed(2)}</p>
+        <p className="text-lg font-bold text-primary-600 mb-3">{CURRENCY_SYMBOL}{item.price.toFixed(2)}</p>
         
         <div className="flex gap-2">
           <button
@@ -354,7 +355,7 @@ const MenuManagement = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Price ($) *
+                    Price ({CURRENCY_SYMBOL}) *
                   </label>
                   <input
                     type="number"

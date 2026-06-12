@@ -16,6 +16,7 @@ const DEMO_MENU = [
 const Menu = () => {
   const { restaurantId } = useParams();
   const navigate = useNavigate();
+  const CURRENCY_SYMBOL = import.meta.env.VITE_CURRENCY_SYMBOL || '₹';
 
   const getImageUrl = (url) => {
     if (!url) return '';
@@ -143,7 +144,7 @@ const Menu = () => {
           <h3 className="font-semibold text-gray-900 mb-1">{item.name}</h3>
           <p className="text-sm text-gray-600 mb-3 line-clamp-2">{item.description}</p>
           <div className="flex items-center justify-between">
-            <span className="text-xl font-bold text-primary-600">${item.price.toFixed(2)}</span>
+            <span className="text-xl font-bold text-primary-600">{CURRENCY_SYMBOL}{item.price.toFixed(2)}</span>
             {quantity === 0 ? (
               <button
                 onClick={handleAddToCart}
@@ -232,7 +233,7 @@ const Menu = () => {
                     )}
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900 mb-1">{item.name}</h3>
-                      <p className="text-sm text-gray-600 mb-2">${item.price.toFixed(2)} each</p>
+                      <p className="text-sm text-gray-600 mb-2">{CURRENCY_SYMBOL}{item.price.toFixed(2)} each</p>
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() => updateQuantity(item._id, item.quantity - 1)}
@@ -256,7 +257,7 @@ const Menu = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-gray-900">${(item.price * item.quantity).toFixed(2)}</p>
+                      <p className="font-bold text-gray-900">{CURRENCY_SYMBOL}{(item.price * item.quantity).toFixed(2)}</p>
                     </div>
                   </div>
                 ))}
@@ -269,7 +270,7 @@ const Menu = () => {
             <div className="border-t p-4 space-y-4">
               <div className="flex items-center justify-between text-lg font-bold">
                 <span>Total</span>
-                <span className="text-primary-600">${getTotalPrice().toFixed(2)}</span>
+                <span className="text-primary-600">{CURRENCY_SYMBOL}{getTotalPrice().toFixed(2)}</span>
               </div>
               <button
                 onClick={() => {
@@ -370,7 +371,7 @@ const Menu = () => {
           <ShoppingCart className="w-5 h-5" />
           <span>{getTotalItems()} Items</span>
           <span>•</span>
-          <span>${getTotalPrice().toFixed(2)}</span>
+          <span>{CURRENCY_SYMBOL}{getTotalPrice().toFixed(2)}</span>
         </button>
       )}
 

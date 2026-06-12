@@ -8,6 +8,7 @@ const OrdersManagement = () => {
   const [orders, setOrders] = useState([]);
   const [activeFilter, setActiveFilter] = useState('all');
   const [loading, setLoading] = useState(true);
+  const CURRENCY_SYMBOL = import.meta.env.VITE_CURRENCY_SYMBOL || '₹';
 
   useEffect(() => {
     fetchOrders();
@@ -94,7 +95,7 @@ const OrdersManagement = () => {
                   {item.menuItem?.name || 'Item'} <span className="text-gray-500">Qty: {item.quantity}</span>
                 </span>
                 <span className="font-semibold text-gray-900">
-                  ${(item.price * item.quantity).toFixed(2)}
+                  {CURRENCY_SYMBOL}{(item.price * item.quantity).toFixed(2)}
                 </span>
               </div>
             ))}
@@ -107,7 +108,7 @@ const OrdersManagement = () => {
               Total Amount
             </span>
             <span className="text-2xl font-bold text-primary-600">
-              ${order.totalAmount?.toFixed(2)}
+              {CURRENCY_SYMBOL}{order.totalAmount?.toFixed(2)}
             </span>
           </div>
         </div>

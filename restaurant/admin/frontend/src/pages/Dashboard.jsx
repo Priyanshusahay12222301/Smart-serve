@@ -18,6 +18,7 @@ import {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const CURRENCY_SYMBOL = import.meta.env.VITE_CURRENCY_SYMBOL || '₹';
   const [stats, setStats] = useState({
     todayOrders: 0,
     pendingOrders: 0,
@@ -136,7 +137,7 @@ const Dashboard = () => {
         }`}>
           {order.status}
         </span>
-        <p className="text-lg font-bold text-gray-900">${order.totalAmount?.toFixed(2)}</p>
+        <p className="text-lg font-bold text-gray-900">{CURRENCY_SYMBOL}{order.totalAmount?.toFixed(2)}</p>
       </div>
     </div>
   );
@@ -214,7 +215,7 @@ const Dashboard = () => {
           <StatCard
             icon={DollarSign}
             label="Total Revenue"
-            value={`$${stats.todayRevenue.toFixed(2)}`}
+            value={`${CURRENCY_SYMBOL}${stats.todayRevenue.toFixed(2)}`}
             subtext={`+${stats.completedOrders} transactions`}
             color="bg-primary-500"
             trend

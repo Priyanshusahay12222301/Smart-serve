@@ -8,6 +8,7 @@ const OrderTracking = () => {
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const CURRENCY_SYMBOL = import.meta.env.VITE_CURRENCY_SYMBOL || '₹';
 
   useEffect(() => {
     fetchOrder();
@@ -144,16 +145,16 @@ const OrderTracking = () => {
               <div key={index} className="flex justify-between items-center">
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">{item.name}</p>
-                  <p className="text-sm text-gray-500">Qty: {item.quantity} × ${item.price.toFixed(2)}</p>
+                  <p className="text-sm text-gray-500">Qty: {item.quantity} × {CURRENCY_SYMBOL}{item.price.toFixed(2)}</p>
                 </div>
-                <p className="font-semibold text-gray-900">${(item.price * item.quantity).toFixed(2)}</p>
+                <p className="font-semibold text-gray-900">{CURRENCY_SYMBOL}{(item.price * item.quantity).toFixed(2)}</p>
               </div>
             ))}
           </div>
           <div className="border-t mt-4 pt-4">
             <div className="flex justify-between items-center text-xl font-bold">
               <span>Total</span>
-              <span className="text-primary-600">${order.totalAmount?.toFixed(2)}</span>
+              <span className="text-primary-600">{CURRENCY_SYMBOL}{order.totalAmount?.toFixed(2)}</span>
             </div>
           </div>
         </div>

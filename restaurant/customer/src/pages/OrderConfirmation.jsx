@@ -7,6 +7,7 @@ import { ArrowLeft, User, Phone, MapPin, MessageSquare } from 'lucide-react';
 const OrderConfirmation = () => {
   const navigate = useNavigate();
   const { cart, getTotalPrice, clearCart, tableNumber, restaurantId } = useCart();
+  const CURRENCY_SYMBOL = import.meta.env.VITE_CURRENCY_SYMBOL || '₹';
   const [formData, setFormData] = useState({
     tableNumber: tableNumber || '',
     customerName: '',
@@ -110,16 +111,16 @@ const OrderConfirmation = () => {
               <div key={item._id} className="flex justify-between items-center">
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">{item.name}</p>
-                  <p className="text-sm text-gray-500">Qty: {item.quantity} × ${item.price.toFixed(2)}</p>
+                  <p className="text-sm text-gray-500">Qty: {item.quantity} × {CURRENCY_SYMBOL}{item.price.toFixed(2)}</p>
                 </div>
-                <p className="font-semibold text-gray-900">${(item.price * item.quantity).toFixed(2)}</p>
+                <p className="font-semibold text-gray-900">{CURRENCY_SYMBOL}{(item.price * item.quantity).toFixed(2)}</p>
               </div>
             ))}
           </div>
           <div className="border-t pt-4">
             <div className="flex justify-between items-center text-xl font-bold">
               <span>Total</span>
-              <span className="text-primary-600">${getTotalPrice().toFixed(2)}</span>
+              <span className="text-primary-600">{CURRENCY_SYMBOL}{getTotalPrice().toFixed(2)}</span>
             </div>
           </div>
         </div>
