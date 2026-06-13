@@ -121,7 +121,7 @@ const createDemoRestaurant = async (SmartServe, displayName) => {
   const now = Date.now().toString(36);
   const random = Math.random().toString(36).substring(2, 7).toUpperCase();
   const restaurantId = `REST-${now}-${random}`;
-  const customerAppUrl = process.env.CUSTOMER_APP_URL || 'http://localhost:3002';
+  const customerAppUrl = process.env.CUSTOMER_APP_URL || 'https://smart-serve-dusky.vercel.app';
 
   return SmartServe.create({
     restaurantId,

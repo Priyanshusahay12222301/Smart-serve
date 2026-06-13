@@ -114,7 +114,7 @@ smartServeSchema.pre('save', function (next) {
   
   // Generate QR code URL for customer app
   if (!this.qrCode.url) {
-    const customerAppUrl = process.env.CUSTOMER_APP_URL || 'http://localhost:3002';
+    const customerAppUrl = process.env.CUSTOMER_APP_URL || 'https://smart-serve-dusky.vercel.app';
     this.qrCode.url = `${customerAppUrl}/${this.restaurantId}`;
   }
   
