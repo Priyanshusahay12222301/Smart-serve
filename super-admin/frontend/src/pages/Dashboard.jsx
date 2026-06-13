@@ -81,6 +81,7 @@ if (!apiPrefixInterceptorRegistered) {
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const CURRENCY_SYMBOL = import.meta.env.VITE_CURRENCY_SYMBOL || '₹';
   const [stats, setStats] = useState(null);
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -810,13 +811,13 @@ const Dashboard = () => {
                         labelStyle={{ color: '#f3f4f6' }}
                         labelFormatter={(label) => `Date: ${label}`}
                         formatter={(value, name) => [
-                          name === 'Revenue ($)' ? `$${value.toFixed(2)}` : value,
+                          name === `Revenue (${CURRENCY_SYMBOL})` ? `${CURRENCY_SYMBOL}${value.toFixed(2)}` : value,
                           name
                         ]}
                       />
                       <Legend />
                       <Area type="monotone" dataKey="orders" stroke="#7c3aed" fillOpacity={1} fill="url(#colorOrders)" name="Orders" />
-                      <Area type="monotone" dataKey="revenue" stroke="#10b981" fillOpacity={1} fill="url(#colorRevenue)" name="Revenue ($)" />
+                      <Area type="monotone" dataKey="revenue" stroke="#10b981" fillOpacity={1} fill="url(#colorRevenue)" name={`Revenue (${CURRENCY_SYMBOL})`} />
                     </AreaChart>
                   </ResponsiveContainer>
                   );
@@ -1101,7 +1102,7 @@ const Dashboard = () => {
                   <div key={plan.name} className="bg-dark-card border border-dark-border rounded-xl p-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-semibold text-white">{plan.name}</h3>
-                      <span className="text-2xl font-bold text-purple-primary">${plan.price}</span>
+                      <span className="text-2xl font-bold text-purple-primary">{CURRENCY_SYMBOL}{plan.price}</span>
                     </div>
                     <p className="text-sm text-gray-400 mb-4">{plan.duration}</p>
                     <div className="space-y-3 mb-4">
@@ -1111,7 +1112,7 @@ const Dashboard = () => {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-400">Monthly Revenue</span>
-                        <span className="text-green-400 font-semibold">${planRevenue.toLocaleString()}</span>
+                        <span className="text-green-400 font-semibold">{CURRENCY_SYMBOL}{planRevenue.toLocaleString()}</span>
                       </div>
                     </div>
                     <div className="pt-3 border-t border-dark-border">
@@ -1185,7 +1186,7 @@ const Dashboard = () => {
                             </div>
                           </td>
                           <td className="py-4">
-                            <div className="text-white font-semibold">${plan.price}</div>
+                            <div className="text-white font-semibold">{CURRENCY_SYMBOL}{plan.price}</div>
                           </td>
                           <td className="py-4">
                             <div className="flex items-center justify-end gap-2">
